@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-3">
+    <div class="col-md-8 col-lg-6 fade-in-up delay-1">
+        <div class="d-flex align-items-center mb-3">
+            <a href="{% url 'dashboard' %}"
+                class="btn btn-sm btn-outline-secondary me-3 border-0 rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px; padding: 0;"><i class="fa-solid fa-arrow-left"></i></a>
+            <h2 class="fw-bold mb-0 text-uppercase" style="letter-spacing: -0.5px; font-size: 1.5rem;">{{ title }}</h2>
+        </div>
+
+        <div class="strava-card p-4">
+            <form method="POST" {% if 'image' in form.fields %}enctype="multipart/form-data"{% endif %}>
+                {% csrf_token %}
+                <div class="mb-4">
+                    {{ form.as_p }}
+                </div>
+
+                {% if formset %}
+                <div class="p-4 rounded-3 mb-4 border offset-section" style="background: rgba(255,255,255,0.02);">
+                    <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.8rem;"><i
+                            class="fa-solid fa-list-check me-2"></i> Entries</h6>
+                    {{ formset.management_form }}
+                    <div id="formset-container">
+                        {% for item_form in formset %}
+                        <div class="p-3 mb-3 border rounded-3 shadow-sm formset-row position-relative"
+                            style="background: var(--bg-card);">
+                            <h6 class="position-absolute top-0 start-0 m-0 py-1 px-2 text-muted border-bottom border-end rounded-bottom-end small fw-bold"
+                                style="border-top-left-radius: 12px; background: rgba(255,255,255,0.05);">
+                                #{{ forloop.counter }}</h6>
+                            <div class="pt-4">
+                                {{ item_form|crispy }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2 border-top pt-4">
+                    <button type="submit" class="btn btn-primary flex-grow-1 py-2 fs-5 border-0 rounded-3">Save</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary py-2 px-4 rounded-3">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .offset-section {
+        margin-left: -1rem;
+        margin-right: -1rem;
+        border-radius: 0 !important;
+        border-right: none !important;
+        border-left: none !important;
+    }
+
+    @media (min-width: 576px) {
+        .offset-section {
+            margin-left: 0;
+            margin-right: 0;
+            border-radius: 0.25rem !important;
+            border-right: 1px solid var(--border-color) !important;
+            border-left: 1px solid var(--border-color) !important;
+        }
+    }
+</style>
+{% endblock %}

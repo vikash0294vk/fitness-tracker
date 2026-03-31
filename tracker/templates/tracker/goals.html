@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Goals{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4 fade-in-up delay-1">
+        <div class="strava-card">
+            <div class="card-header-styled">
+                Create Goal
+            </div>
+            <div class="card-body-styled">
+                <form method="post" action="{% url 'create_goal' %}" class="dashboard-form-stack">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'goals_page' %}">
+                    <div>
+                        <label for="{{ goal_form.title.id_for_label }}" class="form-label">Goal name</label>
+                        {{ goal_form.title }}
+                    </div>
+                    <div>
+                        <label for="{{ goal_form.description.id_for_label }}" class="form-label">Plan</label>
+                        {{ goal_form.description }}
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label for="{{ goal_form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ goal_form.category }}
+                        </div>
+                        <div class="col-6">
+                            <label for="{{ goal_form.period.id_for_label }}" class="form-label">Cycle</label>
+                            {{ goal_form.period }}
+                        </div>
+                    </div>
+                    <div>
+                        <label for="{{ goal_form.target_value.id_for_label }}" class="form-label">Target</label>
+                        {{ goal_form.target_value }}
+                    </div>
+                    <div>
+                        <label for="{{ goal_form.unit.id_for_label }}" class="form-label">Unit</label>
+                        {{ goal_form.unit }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Accept Goal</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="strava-card fade-in-up delay-2">
+            <div class="card-header-styled">
+                Goal Snapshot
+            </div>
+            <div class="card-body-styled">
+                <div class="goals-stat-grid">
+                    <div class="goal-stat-box">
+                        <strong>{{ goal_stats.active }}</strong>
+                        <span>Active</span>
+                    </div>
+                    <div class="goal-stat-box">
+                        <strong>{{ goal_stats.completed }}</strong>
+                        <span>Completed</span>
+                    </div>
+                    <div class="goal-stat-box">
+                        <strong>{{ goal_stats.paused }}</strong>
+                        <span>Paused</span>
+                    </div>
+                    <div class="goal-stat-box">
+                        <strong>{{ goal_stats.total }}</strong>
+                        <span>Total</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 fade-in-up delay-2">
+        <div class="strava-card">
+            <div class="card-header-styled d-flex justify-content-between align-items-center">
+                <span>Active Goals</span>
+                <span class="goal-meta">{{ goal_stats.active }} in progress</span>
+            </div>
+            <div class="card-body-styled">
+                {% if active_goals %}
+                <div class="goal-list">
+                    {% for user_goal in active_goals %}
+                    <div class="goal-card-mini goal-page-card">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ user_goal.title|default:"Untitled goal" }}</h5>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                    <span class="goal-chip">{{ user_goal.get_category_display }}</span>
+                                    <span class="goal-meta">{{ user_goal.get_period_display }} target</span>
+                                </div>
+                                {% if user_goal.description %}
+                                <p class="small text-muted mb-0">{{ user_goal.description }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <div class="goal-page-value">{{ user_goal.current_value }}/{{ user_goal.target_value|default:"0" }}</div>
+                                <div class="goal-meta">{{ user_goal.unit }}</div>
+                            </div>
+                        </div>
+
+                        <div class="progress tracker-progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: {{ user_goal.completion_percentage }}%;" aria-valuenow="{{ user_goal.completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="goal-meta">{{ user_goal.remaining_value }} {{ user_goal.unit }} left</span>
+                            <span class="goal-meta">{{ user_goal.completion_percentage }}%</span>
+                        </div>
+
+                        <form method="post" action="{% url 'update_goal_progress' user_goal.id %}" class="goal-progress-layout">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'goals_page' %}">
+                            <input type="hidden" name="goal_id" value="{{ user_goal.id }}">
+                            <input type="number" name="increment" min="1" value="1" class="form-control" placeholder="Add progress">
+                            <button type="submit" class="btn btn-outline-primary progress-btn">Update Progress</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state-panel">
+                    <h5 class="mb-2">No active goals yet</h5>
+                    <p class="text-muted small mb-0">Create your first daily, weekly, or monthly target and start tracking it here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="strava-card fade-in-up delay-3">
+                    <div class="card-header-styled">
+                        Completed Goals
+                    </div>
+                    <div class="card-body-styled">
+                        {% if completed_goals %}
+                        <div class="goal-list">
+                            {% for user_goal in completed_goals %}
+                            <div class="goal-card-mini goal-complete">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">{{ user_goal.title|default:"Untitled goal" }}</h6>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="goal-chip">{{ user_goal.get_category_display }}</span>
+                                            <span class="goal-meta">{{ user_goal.get_period_display }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="goal-meta">Done</span>
+                                </div>
+                                <p class="small text-muted mb-0">{{ user_goal.current_value }}/{{ user_goal.target_value|default:"0" }} {{ user_goal.unit }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-0">Completed goals will show up here.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="strava-card fade-in-up delay-4">
+                    <div class="card-header-styled">
+                        Paused Goals
+                    </div>
+                    <div class="card-body-styled">
+                        {% if paused_goals %}
+                        <div class="goal-list">
+                            {% for user_goal in paused_goals %}
+                            <div class="goal-card-mini">
+                                <h6 class="fw-bold mb-1">{{ user_goal.title|default:"Untitled goal" }}</h6>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                    <span class="goal-chip">{{ user_goal.get_category_display }}</span>
+                                    <span class="goal-meta">{{ user_goal.get_period_display }}</span>
+                                </div>
+                                <p class="small text-muted mb-0">{{ user_goal.current_value }}/{{ user_goal.target_value|default:"0" }} {{ user_goal.unit }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-0">No paused goals right now.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

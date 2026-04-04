@@ -75,9 +75,26 @@
                     </div>
                     
                     <div class="ps-5 ms-2">
-                        <div class="activity-title">Afternoon Workout <i class="fa-solid fa-dumbbell text-muted ms-2" style="font-size: 1rem;"></i></div>
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="activity-title">Afternoon Workout <i class="fa-solid fa-dumbbell text-muted ms-2" style="font-size: 1rem;"></i></div>
+                            {% if workout.user == request.user %}
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'edit_workout' workout.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <form method="post" action="{% url 'delete_workout' workout.id %}" onsubmit="return confirm('Delete this workout?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
                         {% if workout.notes %}
                         <p class="mb-3 text-dark" style="font-size: 0.95rem;">{{ workout.notes }}</p>
+                        {% endif %}
+
+                        {% if workout.duration_minutes %}
+                        <p class="text-muted mb-3">
+                            <i class="fa-regular fa-clock me-1"></i>{{ workout.duration_minutes }} mins
+                        </p>
                         {% endif %}
                         
                         {% if workout.image %}
@@ -165,6 +182,7 @@
                 Today's Stats
             </div>
             <div class="card-body-styled">
+                <!-- Optional placement for weekly training time: Total Training Time This Week: {{ total_minutes_this_week }} mins -->
                 <div class="mb-4 text-center">
                     <div class="stat-value">{{ workouts_today }}</div>
                     <div class="stat-label">Workouts</div>

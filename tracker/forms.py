@@ -1,20 +1,60 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Workout, WorkoutSet, Meal, FoodItem, Measurement, Goal, HydrationLog
+
+from .models import (
+    CardioSession,
+    FoodItem,
+    Goal,
+    HydrationLog,
+    Meal,
+    Measurement,
+    TemplateExercise,
+    Workout,
+    WorkoutSet,
+    WorkoutTemplate,
+)
+
 
 class WorkoutForm(forms.ModelForm):
     class Meta:
         model = Workout
-        fields = ['notes', 'image']
+        fields = ['notes', 'image', 'duration_minutes']
         widgets = {
             'notes': forms.Textarea(attrs={'class': 'form-control'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'duration_minutes': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
+
 WorkoutSetFormSet = inlineformset_factory(
-    Workout, WorkoutSet, fields=('exercise', 'reps', 'weight'),
-    extra=3, can_delete=False
+    Workout,
+    WorkoutSet,
+    fields=('exercise', 'reps', 'weight'),
+    extra=3,
+    can_delete=False,
 )
+
+
+class CardioSessionForm(forms.ModelForm):
+    class Meta:
+        model = CardioSession
+        fields = [
+            'activity_type',
+            'duration_minutes',
+            'distance_km',
+            'avg_heart_rate',
+            'calories_burned',
+            'notes',
+        ]
+        widgets = {
+            'activity_type': forms.Select(attrs={'class': 'form-control'}),
+            'duration_minutes': forms.NumberInput(attrs={'class': 'form-control'}),
+            'distance_km': forms.NumberInput(attrs={'class': 'form-control'}),
+            'avg_heart_rate': forms.NumberInput(attrs={'class': 'form-control'}),
+            'calories_burned': forms.NumberInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
 
 class MealForm(forms.ModelForm):
     class Meta:
@@ -24,10 +64,12 @@ class MealForm(forms.ModelForm):
             'meal_type': forms.Select(attrs={'class': 'form-select'}),
         }
 
+
 FoodItemFormSet = inlineformset_factory(
     Meal, FoodItem, fields=('name', 'calories', 'protein', 'carbs', 'fats'),
     extra=5, can_delete=False
 )
+
 
 class MeasurementForm(forms.ModelForm):
     class Meta:
@@ -37,6 +79,7 @@ class MeasurementForm(forms.ModelForm):
             'weight': forms.NumberInput(attrs={'class': 'form-control'}),
             'body_fat_percentage': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
 
 class GoalForm(forms.ModelForm):
     class Meta:
@@ -82,3 +125,32 @@ class HydrationForm(forms.ModelForm):
 
 class HydrationQuickAddForm(forms.Form):
     amount = forms.FloatField(min_value=0.1)
+
+
+class WorkoutTemplateForm(forms.ModelForm):
+    class Meta:
+        model = WorkoutTemplate
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+
+TemplateExerciseFormSet = inlineformset_factory(
+    WorkoutTemplate,
+    TemplateExercise,
+    fields=('exercise', 'sets', 'reps', 'weight'),
+    extra=3,
+    can_delete=True,
+)
+
+
+for formset in (WorkoutSetFormSet, TemplateExerciseFormSet):
+    for field_name, field in formset.form.base_fields.items():
+        if isinstance(field.widget, forms.HiddenInput):
+            continue
+        if isinstance(field.widget, forms.Select):
+            field.widget.attrs['class'] = 'form-select'
+        else:
+            field.widget.attrs['class'] = 'form-control'

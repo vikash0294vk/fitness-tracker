@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Wellness and focus illustration</title>
+  <desc id="desc">Bright stretching and recovery themed fitness artwork with a calm energetic feel.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5ffcb"/>
+      <stop offset="52%" stop-color="#b8f2e6"/>
+      <stop offset="100%" stop-color="#76c893"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4d908e"/>
+      <stop offset="100%" stop-color="#277da1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="260" cy="160" r="110" fill="#ffffff" opacity="0.38"/>
+  <circle cx="955" cy="170" r="140" fill="#ffffff" opacity="0.28"/>
+  <circle cx="842" cy="96" r="36" fill="#fff" opacity="0.75"/>
+  <rect x="0" y="710" width="1200" height="190" fill="url(#ground)"/>
+  <ellipse cx="592" cy="748" rx="170" ry="48" fill="#0f4c5c" opacity="0.18"/>
+  <rect x="350" y="644" width="480" height="34" rx="17" fill="#355070"/>
+  <circle cx="598" cy="260" r="56" fill="#2f4858"/>
+  <path d="M559 323 C594 302 648 305 688 348 L753 416 L708 460 L650 406 L615 470 L561 451 L598 386 L535 427 L492 390 Z" fill="#577590"/>
+  <path d="M610 466 L714 540 L857 640 L808 680 L656 590 Z" fill="#bc4749"/>
+  <path d="M574 463 L522 558 L430 648 L385 607 L476 520 L530 426 Z" fill="#bc4749"/>
+  <path d="M617 470 L586 638 L640 638 L681 486 Z" fill="#2f4858"/>
+  <rect x="370" y="624" width="92" height="28" rx="14" transform="rotate(-12 370 624)" fill="#f9c74f"/>
+  <rect x="810" y="658" width="100" height="28" rx="14" transform="rotate(10 810 658)" fill="#f9c74f"/>
+  <path d="M463 618 C372 576 330 494 343 404 C357 307 430 254 512 225" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" opacity="0.42"/>
+  <path d="M820 214 C889 248 944 298 972 380 C1001 465 989 563 933 640" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" opacity="0.34"/>
+</svg>

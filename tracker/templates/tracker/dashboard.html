@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row gx-4">
+    <!-- Left Column: User Quick Stats & Mini Profile -->
+    <div class="col-lg-3 d-none d-lg-block fade-in-up delay-1">
+        <div class="strava-card text-center position-relative pb-4 overflow-hidden">
+            <!-- Mock Cover Image -->
+            <div style="height: 60px; background: rgba(255, 255, 255, 0.05); width: 100%; position: absolute; top: 0; left: 0;"></div>
+            <div class="d-flex justify-content-center pt-4 position-relative z-1 mb-2">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="Profile"
+                    class="avatar-placeholder rounded-circle border border-4 shadow-sm"
+                    style="width: 72px; height: 72px; object-fit: cover; border-color: var(--bg-card) !important;">
+                {% else %}
+                <div class="avatar-placeholder rounded-circle border border-4 shadow-sm" style="width: 72px; height: 72px; font-size: 1.8rem; border-color: var(--bg-card) !important;">
+                    {{ user.username|make_list|first|upper }}
+                </div>
+                {% endif %}
+            </div>
+            <h5 class="fw-bold mb-0 position-relative z-1">{{ user.username }}</h5>
+
+            <div class="d-flex border-top mt-3">
+                <div class="flex-fill border-end p-2 pb-3">
+                    <div class="stat-label">Streak</div>
+                    <div class="fw-bold fs-5">{{ streak|default:"0" }} <i class="fa-solid fa-fire text-warning opacity-75"></i></div>
+                </div>
+                <div class="flex-fill border-end p-2 pb-3">
+                    <div class="stat-label">Followers</div>
+                    <div class="fw-bold fs-5">{{ user.followers.count|default:"0" }}</div>
+                </div>
+                <div class="flex-fill p-2 pb-3">
+                    <div class="stat-label">Following</div>
+                    <div class="fw-bold fs-5">{{ user.following.count|default:"0" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="strava-card p-3">
+            <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.8rem;">Quick Links</h6>
+            <a href="{% url 'log_workout' %}" class="d-block mb-3 text-decoration-none text-dark fw-bold"><i
+                    class="fa-solid fa-plus-circle text-muted me-2"></i> Add manual entry</a>
+            <a href="{% url 'log_meal' %}" class="d-block mb-3 text-decoration-none text-dark fw-bold"><i
+                    class="fa-solid fa-utensils text-muted me-2"></i> Add nutrition</a>
+            <a href="{% url 'profile' %}" class="d-block text-decoration-none text-dark fw-bold"><i
+                    class="fa-solid fa-gear text-muted me-2"></i> Settings</a>
+        </div>
+    </div>
+
+    <!-- Center Column: Activity Feed -->
+    <div class="col-lg-6 col-md-8 fade-in-up delay-2">
+        <h4 class="fw-bold mb-3 d-lg-none">Activity Feed</h4>
+
+        <div class="strava-card p-4">
+            <h5 class="fw-bold mb-4 border-bottom pb-2">Recent Activity</h5>
+
+            {% if recent_workouts %}
+            <div class="activity-feed">
+                {% for workout in recent_workouts %}
+                <div class="activity-item">
+                    <div class="activity-header">
+                        {% if workout.user.profile_picture %}
+                        <img src="{{ workout.user.profile_picture.url }}" alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
+                            {{ workout.user.username|make_list|first|upper }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem;">{{ workout.user.username }}</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">{{ workout.date|date:"F d, Y" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ps-5 ms-2">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="activity-title">Afternoon Workout <i class="fa-solid fa-dumbbell text-muted ms-2" style="font-size: 1rem;"></i></div>
+                            {% if workout.user == request.user %}
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'edit_workout' workout.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <form method="post" action="{% url 'delete_workout' workout.id %}" onsubmit="return confirm('Delete this workout?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if workout.notes %}
+                        <p class="mb-3 text-dark" style="font-size: 0.95rem;">{{ workout.notes }}</p>
+                        {% endif %}
+
+                        {% if workout.duration_minutes %}
+                        <p class="text-muted mb-3">
+                            <i class="fa-regular fa-clock me-1"></i>{{ workout.duration_minutes }} mins
+                        </p>
+                        {% endif %}
+                        
+                        {% if workout.image %}
+                        <div class="mb-3 rounded overflow-hidden shadow-sm" style="max-height: 400px; display: flex; align-items: center; justify-content: center; background: #000;">
+                            <img src="{{ workout.image.url }}" alt="Workout Photo" class="img-fluid" style="max-height: 400px; width: 100%; object-fit: contain;">
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-5 mt-2 mb-3">
+                            <div>
+                                <div class="stat-label">Sets</div>
+                                <div class="stat-value">{{ workout.sets.count }}</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">Exercises</div>
+                                <div style="font-size: 1.1rem; font-weight: 500; line-height: 1.6; margin-top: 5px;">
+                                    {% for set in workout.sets.all|slice:":2" %}
+                                    <span class="d-inline-block px-2 py-1 bg-light rounded-2 me-1 mb-1 shadow-sm border border-light" style="font-size: 0.85rem;">{{ set.exercise.name }}</span>
+                                    {% empty %}
+                                    <span class="text-muted">None</span>
+                                    {% endfor %}
+                                    {% if workout.sets.count > 2 %}
+                                    <span class="d-inline-block text-muted px-2 py-1" style="font-size: 0.85rem;">+ {{ workout.sets.count|add:"-2" }} more</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-bar border-top pt-3 mt-3">
+                        {% csrf_token %}
+                        <!-- Kudos Button -->
+                        <button class="action-btn kudo-btn" data-workout-id="{{ workout.id }}">
+                            <!-- We use Javascript to determine if the user liked it, but we can do a quick check if needed. For now, rely on JS or simple template logic. -->
+                            {% if request.user in workout.kudos.all %}
+                                <i class="fa-solid fa-thumbs-up text-primary kudo-icon"></i> 
+                            {% else %}
+                                <i class="fa-regular fa-thumbs-up kudo-icon"></i> 
+                            {% endif %}
+                            <span class="kudo-text">Kudos</span> 
+                            <span class="kudo-count badge bg-secondary ms-1">{{ workout.kudos.count }}</span>
+                        </button>
+                        
+                        <!-- Comment Toggle Button -->
+                        <button class="action-btn comment-toggle-btn" data-workout-id="{{ workout.id }}">
+                            <i class="fa-regular fa-comment"></i> Comment 
+                            <span class="comment-count badge bg-secondary ms-1">{{ workout.comments.count }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Hidden Comment Section -->
+                    <div class="comment-section mt-3 pt-3 border-top" id="comments-{{ workout.id }}" style="display: none; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                        <div class="comments-list mb-3" id="comments-list-{{ workout.id }}">
+                            {% for comment in workout.comments.all %}
+                            <div class="mb-2">
+                                <span class="fw-bold text-light" style="font-size: 0.9rem;">{{ comment.user.username }}</span>
+                                <span class="text-secondary ms-2" style="font-size: 0.8rem;">{{ comment.created_at|date:"M d, P" }}</span>
+                                <p class="mb-0 text-white-50" style="font-size: 0.95rem;">{{ comment.text }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm comment-input" id="comment-input-{{ workout.id }}" placeholder="Add a comment...">
+                            <button class="btn btn-primary btn-sm submit-comment-btn" data-workout-id="{{ workout.id }}">Post</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center p-5">
+                <i class="fa-solid fa-ghost fs-1 text-muted mb-3 opacity-50"></i>
+                <h5 class="text-muted">No activities yet</h5>
+                <p class="text-muted small">When you complete workouts, they'll show up here.</p>
+                <a href="{% url 'log_workout' %}" class="btn btn-outline-primary mt-2">Log a Workout</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Goals and Daily Stats -->
+    <div class="col-lg-3 col-md-4 fade-in-up delay-3">
+        <div class="strava-card">
+            <div class="card-header-styled">
+                Today's Stats
+            </div>
+            <div class="card-body-styled">
+                <!-- Optional placement for weekly training time: Total Training Time This Week: {{ total_minutes_this_week }} mins -->
+                <div class="mb-4 text-center">
+                    <div class="stat-value">{{ workouts_today }}</div>
+                    <div class="stat-label">Workouts</div>
+                </div>
+                <div class="text-center border-top pt-4">
+                    <div class="stat-value">{{ calories_today }}</div>
+                    <div class="stat-label">Calories Consumed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="strava-card">
+            <div class="card-header-styled">
+                Goals Target
+            </div>
+            <div class="card-body-styled">
+                {% if active_goals %}
+                <div class="goal-list mb-3">
+                    {% for user_goal in active_goals %}
+                    <div class="goal-card-mini {% if user_goal.achieved %}goal-complete{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-1">{{ user_goal.title|default:"Untitled goal" }}</h6>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="goal-chip">{{ user_goal.get_category_display }}</span>
+                                    <span class="goal-meta">{{ user_goal.get_period_display }} target</span>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill goal-period-pill">{{ user_goal.current_value }}/{{ user_goal.target_value|default:"0" }}</span>
+                        </div>
+                        {% if user_goal.description %}
+                        <p class="small text-muted mb-3">{{ user_goal.description }}</p>
+                        {% endif %}
+                        <div class="progress tracker-progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: {{ user_goal.completion_percentage }}%;" aria-valuenow="{{ user_goal.completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="goal-meta">
+                                {% if user_goal.achieved %}
+                                Goal achieved
+                                {% else %}
+                                {{ user_goal.remaining_value }} {{ user_goal.unit }} left
+                                {% endif %}
+                            </span>
+                            <span class="goal-meta">{{ user_goal.completion_percentage }}%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'goals_page' %}" class="btn btn-primary w-100">Open Goals Page</a>
+                {% else %}
+                <p class="text-muted small mb-3">Create daily, weekly, or monthly targets on the separate goals page and track progress there.</p>
+                <a href="{% url 'goals_page' %}" class="btn btn-primary w-100">Create Your First Goal</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="strava-card fade-in-up delay-4">
+            <div class="card-header-styled">
+                Weight History
+            </div>
+            <div class="card-body-styled p-3">
+                <canvas id="weightChart" style="width: 100%; height: 200px;"></canvas>
+            </div>
+        </div>
+
+        <div class="strava-card">
+            <div class="card-header-styled">
+                Goal Progress
+            </div>
+            <div class="card-body-styled text-center">
+                {% if progress == "N/A" %}
+                <p class="text-muted mb-2">No active goals or measurements.</p>
+                <a href="{% url 'log_measurement' %}" class="btn btn-sm btn-outline-secondary w-100">Add Measurement</a>
+                {% else %}
+                <h3 class="fw-bold mb-1">{{ progress }}</h3>
+                <div class="stat-label">To target</div>
+                {% endif %}
+
+                <hr class="my-3">
+                <h6 class="fw-bold mb-2" style="font-size: 0.85rem;">Today's Nutrition</h6>
+                {% if meals_today %}
+                <ul class="list-unstyled mb-0 text-start">
+                    {% for meal in meals_today %}
+                    <li class="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center">
+                        <span class="fw-bold small">{{ meal.meal_type }}</span>
+                        <span class="badge" style="background: var(--gradient-brand); font-weight: 600;">{{ meal.total_calories }} kcal</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small mb-0">No meals logged today.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="strava-card">
+            <div class="card-header-styled">
+                Water Hydration
+            </div>
+            <div class="card-body-styled">
+                <div class="hydration-ring-wrap mb-3">
+                    <div class="hydration-ring" style="--hydration-progress: {{ hydration_log.completion_percentage }}%;">
+                        <div class="hydration-ring-inner">
+                            <strong>{{ hydration_log.consumed_litres|floatformat:1 }}L</strong>
+                            <span>today</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="goal-meta">Target</span>
+                    <span class="fw-bold">{{ hydration_log.target_litres|floatformat:1 }}L</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="goal-meta">Status</span>
+                    <span class="{% if hydration_log.remaining_litres > 0 %}text-warning{% else %}text-success{% endif %}">
+                        {% if hydration_log.remaining_litres > 0 %}
+                        Drink {{ hydration_log.remaining_litres|floatformat:1 }}L more
+                        {% else %}
+                        Good hydration today
+                        {% endif %}
+                    </span>
+                </div>
+                <form method="post" action="{% url 'log_hydration' %}" class="dashboard-form-stack">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label for="{{ hydration_form.amount.id_for_label }}" class="form-label">Add water</label>
+                            {{ hydration_form.amount }}
+                        </div>
+                        <div class="col-6">
+                            <label for="{{ hydration_form.target_litres.id_for_label }}" class="form-label">Daily target</label>
+                            {{ hydration_form.target_litres }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Log Water Intake</button>
+                </form>
+                <div class="mt-3">
+                    <div class="goal-meta mb-2">Quick add</div>
+                    <div class="quick-add-grid">
+                        {% for quick_amount in hydration_quick_amounts %}
+                        <form method="post" action="{% url 'quick_add_hydration' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="amount" value="{{ quick_amount }}">
+                            <input type="hidden" name="target_litres" value="{{ hydration_log.target_litres }}">
+                            <button type="submit" class="quick-add-btn">+{{ quick_amount|floatformat:-2 }}L</button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="strava-card fade-in-up delay-4">
+            <div class="card-header-styled d-flex justify-content-between align-items-center">
+                <span>Top Athletes</span>
+                <i class="fa-solid fa-trophy text-warning"></i>
+            </div>
+            <div class="card-body-styled p-3">
+                {% if top_athletes %}
+                <ul class="list-unstyled mb-0">
+                    {% for athlete in top_athletes %}
+                    <li class="d-flex align-items-center justify-content-between mb-3 {% if not forloop.last %}pb-3 border-bottom{% endif %} pt-1">
+                        <div class="d-flex align-items-center">
+                            <span class="fw-bold text-muted me-2" style="font-size: 0.8rem;">#{{ forloop.counter }}</span>
+                            {% if athlete.profile_picture %}
+                            <img src="{{ athlete.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-weight: bold; font-size: 0.9rem;">
+                                {{ athlete.username|make_list|first|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="fw-bold" style="font-size: 0.95rem;">{{ athlete.username }}</div>
+                        </div>
+                        <div class="badge" style="background: var(--gradient-brand); font-weight: 600; font-size: 0.85rem;">
+                            {{ athlete.workout_count }} <i class="fa-solid fa-dumbbell ms-1" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small mb-0 text-center py-2">No workouts logged yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Weight Chart Logic
+    const rawHistory = '{{ weight_history_json|escapejs }}';
+    if (rawHistory && rawHistory !== '[]') {
+        const historyData = JSON.parse(rawHistory);
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        const labels = historyData.map(d => d.date);
+        const dataPoints = historyData.map(d => d.weight);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: dataPoints,
+                    borderColor: '#fc4c02',
+                    backgroundColor: 'rgba(252, 76, 2, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#fc4c02',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { 
+                        display: true,
+                        grid: { display: false }
+                    },
+                    y: { 
+                        display: true,
+                        suggestedMin: Math.min(...dataPoints) - 2,
+                        suggestedMax: Math.max(...dataPoints) + 2
+                    }
+                }
+            }
+        });
+    } else {
+        const chartWrapper = document.getElementById('weightChart')?.parentElement;
+        if (chartWrapper) {
+            chartWrapper.innerHTML = '<p class="text-muted small text-center my-4 py-2">No weight history available. <a href="{% url 'log_measurement' %}">Log a measurement.</a></p>';
+        }
+    }
+
+    // Comment Toggle Logic
+    document.querySelectorAll('.comment-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const workoutId = this.dataset.workoutId;
+            const commentSection = document.getElementById(`comments-${workoutId}`);
+            if (commentSection.style.display === 'none') {
+                commentSection.style.display = 'block';
+            } else {
+                commentSection.style.display = 'none';
+            }
+        });
+    });
+
+    // Kudo Toggle Logic
+    document.querySelectorAll('.kudo-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const workoutId = this.dataset.workoutId;
+            const icon = this.querySelector('.kudo-icon');
+            const countSpan = this.querySelector('.kudo-count');
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch(`/workout/${workoutId}/kudo/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.liked) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid', 'text-primary');
+                } else {
+                    icon.classList.remove('fa-solid', 'text-primary');
+                    icon.classList.add('fa-regular');
+                }
+                countSpan.textContent = data.count;
+            });
+        });
+    });
+
+    // Add Comment Logic
+    document.querySelectorAll('.submit-comment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const workoutId = this.dataset.workoutId;
+            const inputField = document.getElementById(`comment-input-${workoutId}`);
+            const text = inputField.value.trim();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const countSpan = document.querySelector(`.comment-toggle-btn[data-workout-id="${workoutId}"] .comment-count`);
+
+            if (!text) return;
+
+            fetch(`/workout/${workoutId}/comment/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update Count
+                    countSpan.textContent = data.count;
+                    
+                    // Add new comment to UI
+                    const commentsList = document.getElementById(`comments-list-${workoutId}`);
+                    const newHtml = `
+                        <div class="mb-2">
+                            <span class="fw-bold text-light" style="font-size: 0.9rem;">${data.comment.username}</span>
+                            <span class="text-secondary ms-2" style="font-size: 0.8rem;">${data.comment.created_at}</span>
+                            <p class="mb-0 text-white-50" style="font-size: 0.95rem;">${data.comment.text}</p>
+                        </div>
+                    `;
+                    commentsList.insertAdjacentHTML('beforeend', newHtml);
+                    
+                    // Clear input
+                    inputField.value = '';
+                }
+            });
+        });
+    });
+
+});
+</script>
+{% endblock %}

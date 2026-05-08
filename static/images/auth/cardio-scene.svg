@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Cardio workout illustration</title>
+  <desc id="desc">Bright running artwork with a person in motion and a lively fitness backdrop.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d8f9ff"/>
+      <stop offset="50%" stop-color="#9be7ff"/>
+      <stop offset="100%" stop-color="#7c83fd"/>
+    </linearGradient>
+    <linearGradient id="track" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff7b54"/>
+      <stop offset="100%" stop-color="#ffb26b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="180" cy="140" r="92" fill="#ffffff" opacity="0.45"/>
+  <circle cx="1030" cy="150" r="130" fill="#eefbff" opacity="0.45"/>
+  <path d="M0 645 C210 560 350 740 540 660 C700 590 850 520 1200 620 L1200 900 L0 900 Z" fill="#ffffff" opacity="0.26"/>
+  <path d="M0 700 C220 630 410 810 620 720 C790 645 930 610 1200 710 L1200 900 L0 900 Z" fill="url(#track)"/>
+  <ellipse cx="602" cy="735" rx="145" ry="42" fill="#6d3d14" opacity="0.16"/>
+  <circle cx="620" cy="245" r="58" fill="#1f2a44"/>
+  <path d="M575 310 C605 292 646 292 686 328 L744 385 L694 431 L645 382 L620 458 L555 445 L587 350 L544 388 L498 355 Z" fill="#ff595e"/>
+  <path d="M612 452 L695 474 L654 631 L584 615 Z" fill="#1f2a44"/>
+  <path d="M652 458 L724 504 L835 602 L779 646 L662 550 Z" fill="#1f2a44"/>
+  <path d="M603 455 L555 556 L457 629 L409 589 L508 489 L545 421 Z" fill="#1f2a44"/>
+  <rect x="392" y="576" width="104" height="30" rx="15" transform="rotate(-40 392 576)" fill="#00afb9"/>
+  <rect x="754" y="626" width="112" height="30" rx="15" transform="rotate(12 754 626)" fill="#00afb9"/>
+  <path d="M744 385 L852 298 L888 342 L782 418 Z" fill="#ff595e"/>
+  <rect x="846" y="286" width="150" height="20" rx="10" transform="rotate(-28 846 286)" fill="#1f2a44"/>
+  <rect x="962" y="236" width="40" height="72" rx="12" transform="rotate(-28 962 236)" fill="#1f2a44"/>
+  <rect x="1022" y="204" width="28" height="92" rx="10" transform="rotate(-28 1022 204)" fill="#1f2a44"/>
+</svg>

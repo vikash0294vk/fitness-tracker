@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="row align-items-stretch justify-content-center pt-4 g-4 auth-landing">
+    <div class="col-lg-6 d-none d-lg-block">
+        <div class="strava-card p-4 h-100 auth-hero-panel">
+            <div class="auth-hero-copy mb-4">
+                <p class="auth-hero-kicker mb-2">Train. Track. Repeat.</p>
+                <h2 class="fw-bold mb-3">See your fitness journey before you even sign in.</h2>
+                <p class="text-muted mb-0">Workout logs, cardio sessions, progress charts, and daily consistency all in one place.</p>
+            </div>
+
+            <div class="auth-photo-grid">
+                <div class="auth-photo-card auth-photo-main" style="background-image: linear-gradient(180deg, rgba(10,13,20,0.02), rgba(10,13,20,0.24)), url('{% static "images/auth/strength-scene.svg" %}');">
+                    <div class="auth-photo-caption">
+                        <span>Strength</span>
+                        <strong>Track every set that counts</strong>
+                    </div>
+                </div>
+                <div class="auth-photo-card" style="background-image: linear-gradient(180deg, rgba(10,13,20,0.03), rgba(10,13,20,0.26)), url('{% static "images/auth/cardio-scene.svg" %}');">
+                    <div class="auth-photo-caption">
+                        <span>Cardio</span>
+                        <strong>Record your pace and endurance</strong>
+                    </div>
+                </div>
+                <div class="auth-photo-card" style="background-image: linear-gradient(180deg, rgba(10,13,20,0.03), rgba(10,13,20,0.26)), url('{% static "images/auth/focus-scene.svg" %}');">
+                    <div class="auth-photo-caption">
+                        <span>Discipline</span>
+                        <strong>Build momentum one session at a time</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7 col-lg-5">
+        <div class="strava-card p-5 mt-4">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-uppercase" style="letter-spacing: -0.5px;">Log In</h3>
+                <p class="text-muted small">Welcome back to Fit Track</p>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="d-grid mt-4 pt-3">
+                    <button class="btn btn-primary btn-lg border-0" type="submit" style="font-size: 1.1rem;">Log In</button>
+                </div>
+            </form>
+            <div class="text-center mt-4 border-top pt-3">
+                <small class="text-muted fw-bold">Don't have an account? <a href="{% url 'register' %}" style="color: var(--brand-orange); text-decoration: none;">Sign Up</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

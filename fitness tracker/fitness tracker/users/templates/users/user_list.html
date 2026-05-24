@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Community{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+        <div>
+            <p class="auth-hero-kicker mb-2">Community</p>
+            <h2 class="fw-bold mb-1">Friends, groups, and fitness chat</h2>
+            <p class="text-muted mb-0">Follow people, join focused groups, and talk with others who are training with you.</p>
+        </div>
+        {% csrf_token %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="strava-card p-4 h-100">
+                <h5 class="fw-bold mb-3">Create a Fitness Group</h5>
+                <p class="text-muted small mb-3">Start a crew for walking, lifting, running, or habit check-ins.</p>
+                <form method="post" action="{% url 'create_group' %}" class="dashboard-form-stack">
+                    {% csrf_token %}
+                    {{ group_form.as_p }}
+                    <button type="submit" class="btn btn-primary w-100">Create Group</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="strava-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Fitness Groups</h5>
+                    <span class="goal-meta">{{ groups|length }} active groups</span>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+                    {% for group in groups %}
+                    <div class="col">
+                        <div class="community-group-card h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ group.name }}</h6>
+                                    <div class="goal-meta">Created by {{ group.created_by.username }}</div>
+                                </div>
+                                <span class="goal-chip">{{ group.member_count }} members</span>
+                            </div>
+                            <p class="text-muted small mb-3">{{ group.description|default:"A place to train together and stay accountable." }}</p>
+                            <div class="d-flex gap-2 flex-wrap mt-auto">
+                                <a href="{% url 'group_detail' group.slug %}" class="btn btn-outline-secondary btn-sm">Open Chat</a>
+                                <form method="post" action="{% url 'toggle_group_membership' group.slug %}" class="group-membership-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'user_list' %}">
+                                    {% if group.id in joined_group_ids %}
+                                    <button type="submit" class="btn btn-primary btn-sm group-membership-btn" data-group-slug="{{ group.slug }}">
+                                        Joined
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-outline-primary btn-sm group-membership-btn" data-group-slug="{{ group.slug }}">
+                                        Join Group
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="empty-state-panel">
+                            <h5 class="mb-2">No groups yet</h5>
+                            <p class="text-muted mb-0">Create the first fitness group and invite others to join the chat.</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="strava-card p-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Find Friends</h5>
+            <span class="goal-meta">{{ users|length }} athletes nearby in the app</span>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            {% for u in users %}
+            <div class="col">
+                <div class="strava-card p-4 text-center h-100 d-flex flex-column align-items-center justify-content-center mb-0">
+                    {% if u.profile_picture %}
+                    <img src="{{ u.profile_picture.url }}" alt="{{ u.username }}" class="rounded-circle mb-3 border" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-weight: bold; font-size: 2rem;">
+                        {{ u.username|make_list|first|upper }}
+                    </div>
+                    {% endif %}
+                    <h5 class="fw-bold mb-1">{{ u.username }}</h5>
+                    <p class="text-muted small mb-3">
+                        <span id="follower-count-{{ u.id }}">{{ u.followers.count }}</span> Followers
+                    </p>
+
+                    <button class="btn follow-toggle-btn {% if u.id in following_ids %}btn-secondary{% else %}btn-primary{% endif %} w-100 mt-auto" data-user-id="{{ u.id }}" data-url="{% url 'toggle_follow' u.id %}">
+                        {% if u.id in following_ids %}
+                        Following
+                        {% else %}
+                        Follow
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 py-5 text-center">
+                <h4 class="text-muted">No other users found.</h4>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    document.querySelectorAll('.follow-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const url = this.dataset.url;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const countSpan = document.getElementById(`follower-count-${userId}`);
+                    countSpan.textContent = data.follower_count;
+
+                    if (data.is_following) {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-secondary');
+                        btn.innerHTML = '<i class="fa-solid fa-user-check me-1"></i> Following';
+                    } else {
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-primary');
+                        btn.innerHTML = '<i class="fa-solid fa-user-plus me-1"></i> Follow';
+                    }
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.group-membership-form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const button = form.querySelector('.group-membership-btn');
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new FormData(form)
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'Could not update membership');
+                }
+                return data;
+            })
+            .then(data => {
+                if (data.joined) {
+                    button.classList.remove('btn-outline-primary');
+                    button.classList.add('btn-primary');
+                    button.textContent = 'Joined';
+                } else {
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-outline-primary');
+                    button.textContent = 'Join Group';
+                }
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

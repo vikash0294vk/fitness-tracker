@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profile Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <!-- Profile Sidebar -->
+    <div class="col-md-4 mb-4 fade-in-up delay-1">
+        <div class="strava-card text-center position-relative pb-4 overflow-hidden h-100">
+            <!-- Mock Cover Image -->
+            <div style="height: 100px; background: rgba(255, 255, 255, 0.05); width: 100%; position: absolute; top: 0; left: 0;"></div>
+            <div class="d-flex justify-content-center pt-5 mt-3 position-relative z-1 mb-3">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="Profile"
+                    class="avatar-placeholder rounded-circle border border-4 shadow-sm" style="width: 120px; height: 120px; object-fit: cover; border-color: var(--bg-card) !important;">
+                {% else %}
+                <div class="avatar-placeholder rounded-circle border border-4 shadow pb-1" style="width: 120px; height: 120px; font-size: 3.5rem; border-color: var(--bg-card) !important;">
+                    {{ user.username|make_list|first|upper }}
+                </div>
+                {% endif %}
+            </div>
+            <h3 class="fw-bold mb-1 position-relative z-1">{{ user.username }}</h3>
+            <p class="text-muted mb-4 position-relative z-1">{{ user.email }}</p>
+
+            <div class="w-100 border-top pt-4 px-4 text-start">
+                <div class="d-flex justify-content-around border-bottom pb-3 mb-3 text-center">
+                    <div>
+                        <div class="fw-bold fs-5">{{ streak|default:"0" }} <i class="fa-solid fa-fire text-warning opacity-75"></i></div>
+                        <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Streak</div>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5">{{ user.followers.count|default:"0" }}</div>
+                        <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Followers</div>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5">{{ user.following.count|default:"0" }}</div>
+                        <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Following</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
+                    <span class="text-muted fw-bold small text-uppercase">Activity Level</span>
+                    <span class="fw-bold">{{ user.get_activity_level_display|default:"Not Set" }}</span>
+                </div>
+                <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
+                    <span class="text-muted fw-bold small text-uppercase">Weight</span>
+                    <span class="fw-bold">{{ user.weight|default:"--" }} kg</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted fw-bold small text-uppercase">Height</span>
+                    <span class="fw-bold">{{ user.height|default:"--" }} cm</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Form -->
+    <div class="col-md-8 mb-4 fade-in-up delay-2">
+        <div class="strava-card">
+            <div class="card-header-styled">
+                <i class="fa-solid fa-user-pen me-2"></i> Edit Profile
+            </div>
+            <div class="card-body-styled">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ u_form.username|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ u_form.email|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2 mb-3 mt-2"
+                            style="font-size: 0.8rem;">Athletic Details</h6>
+                        <div class="col-md-4 mb-3">
+                            {{ u_form.age|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ u_form.weight|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ u_form.height|as_crispy_field }}
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            {{ u_form.activity_level|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row mt-2 border-top pt-3">
+                        <div class="col-12 mb-4">
+                            {{ u_form.profile_picture|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-2 pt-3 border-top">
+                        <button class="btn btn-primary border-0" type="submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="strava-card mt-4">
+            <div class="card-header-styled d-flex justify-content-between align-items-center">
+                <span><i class="fa-brands fa-strava me-2"></i> Strava</span>
+                {% if strava_connected and strava_has_read_scope %}
+                <span class="badge text-bg-success">Connected</span>
+                {% elif strava_connected %}
+                <span class="badge text-bg-warning">Reconnect Needed</span>
+                {% elif strava_configured %}
+                <span class="badge text-bg-secondary">Ready</span>
+                {% else %}
+                <span class="badge text-bg-dark">Setup Needed</span>
+                {% endif %}
+            </div>
+            <div class="card-body-styled">
+                {% if not strava_configured %}
+                <p class="text-muted mb-2">Set <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code>, then restart Django.</p>
+                <p class="text-muted small mb-0">In your Strava app settings, the callback domain must match this site. Strava allows <code>localhost</code> and <code>127.0.0.1</code> for local development.</p>
+                {% elif strava_connected %}
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <span class="text-muted fw-bold small text-uppercase">Athlete ID</span>
+                    <span class="fw-bold">{{ user.strava_athlete_id|default:"--" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <span class="text-muted fw-bold small text-uppercase">Last Sync</span>
+                    <span class="fw-bold">{{ user.strava_last_sync_at|date:"M d, Y P"|default:"Never" }}</span>
+                </div>
+                {% if not strava_has_read_scope %}
+                <p class="text-muted mb-3">This connection is missing activity access. Reconnect and approve activity permissions to import Strava workouts.</p>
+                {% else %}
+                <p class="text-muted mb-3">Your first sync imports the last 30 days. Later syncs only pull activities that are new since the previous sync.</p>
+                {% endif %}
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'connect_strava' %}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-rotate-right me-2"></i>Reconnect
+                    </a>
+                    <form method="POST" action="{% url 'sync_strava' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-cloud-arrow-down me-2"></i>Sync Recent Activities
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'disconnect_strava' %}" onsubmit="return confirm('Disconnect Strava from this profile?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-link-slash me-2"></i>Disconnect
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="text-muted mb-3">Connect Strava to import recent runs, rides, walks, swims, and other activities into your cardio log.</p>
+                <a href="{% url 'connect_strava' %}" class="btn btn-primary">
+                    <i class="fa-brands fa-strava me-2"></i>Connect Strava
+                </a>
+                <p class="text-muted small mt-3 mb-0">Your Strava app callback domain must match this site's host. Use <code>localhost</code> or <code>127.0.0.1</code> for local testing.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

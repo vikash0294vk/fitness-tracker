@@ -144,5 +144,5 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Strava
 STRAVA_CLIENT_ID = os.environ.get('STRAVA_CLIENT_ID', '229757').strip()
-STRAVA_CLIENT_SECRET = os.environ.get('STRAVA_CLIENT_SECRET', 'bce5e19fddcc3ab95a3ef6ecfdff3e159b7d9cc7').strip()
+STRAVA_CLIENT_SECRET = os.environ.get('STRAVA_CLIENT_SECRET', '').strip()
 STRAVA_OAUTH_SCOPES = os.environ.get('STRAVA_OAUTH_SCOPES', 'activity:read_all').strip()

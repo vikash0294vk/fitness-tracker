@@ -45,6 +45,7 @@ class CardioSessionForm(forms.ModelForm):
             'avg_heart_rate',
             'calories_burned',
             'notes',
+            'map_polyline',
         ]
         widgets = {
             'activity_type': forms.Select(attrs={'class': 'form-control'}),
@@ -53,6 +54,7 @@ class CardioSessionForm(forms.ModelForm):
             'avg_heart_rate': forms.NumberInput(attrs={'class': 'form-control'}),
             'calories_burned': forms.NumberInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control'}),
+            'map_polyline': forms.HiddenInput(attrs={'id': 'id_map_polyline'}),
         }
 
 
@@ -104,7 +106,16 @@ class GoalForm(forms.ModelForm):
 
 class GoalProgressForm(forms.Form):
     goal_id = forms.IntegerField(widget=forms.HiddenInput())
-    increment = forms.IntegerField(min_value=1, initial=1, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    increment = forms.IntegerField(
+        initial=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'placeholder': '+1 or -1'})
+    )
+
+    def clean_increment(self):
+        increment = self.cleaned_data['increment']
+        if increment == 0:
+            raise forms.ValidationError('Enter a positive or negative number.')
+        return increment
 
 
 class HydrationForm(forms.ModelForm):

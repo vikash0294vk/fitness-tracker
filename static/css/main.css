@@ -2,11 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-    /* Brand Gradient - Vibrant Orange/Pink */
-    --brand-primary: #ff4757;
-    --brand-secondary: #ff7f50;
+    /* Brand Gradient - Strava Orange */
+    --brand-primary: #fc4c02;
+    --brand-secondary: #ff6b2b;
     --gradient-brand: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-    --brand-glow: rgba(255, 71, 87, 0.4);
+    --brand-glow: rgba(252, 76, 2, 0.4);
 
     /* Dark Theme Core Colors - Deep Premium Navy/Black */
     --bg-main: #0a0d14;
@@ -414,16 +414,16 @@ hr.dropdown-divider {
 
 
 [data-theme="light"] {
-    --bg-main: #f0f4f8;
-    --bg-card: rgba(255, 255, 255, 0.8);
-    --bg-card-hover: rgba(255, 255, 255, 0.95);
-    --text-primary: #0f172a;
+    --bg-main: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --text-primary: #1e293b;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     --border-color: rgba(0, 0, 0, 0.08);
     --border-light: rgba(0, 0, 0, 0.04);
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --brand-glow: rgba(255, 71, 87, 0.3);
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --brand-glow: rgba(252, 76, 2, 0.3);
 }
 
 
@@ -756,6 +756,223 @@ hr.dropdown-divider {
     background: rgba(56, 189, 248, 0.15);
 }
 
+.celebration-flash {
+    position: fixed;
+    top: 88px;
+    right: 24px;
+    width: min(420px, calc(100vw - 32px));
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(255, 104, 58, 0.96), rgba(255, 71, 87, 0.92));
+    color: #fff;
+    box-shadow: 0 24px 50px rgba(255, 71, 87, 0.28);
+    overflow: hidden;
+    z-index: 1080;
+    transform: translateY(-18px) scale(0.96);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.celebration-flash.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.celebration-flash__glow {
+    position: absolute;
+    inset: auto -40px -55px auto;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    filter: blur(20px);
+}
+
+.celebration-flash__icon {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 1.25rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.celebration-flash__content {
+    position: relative;
+    min-width: 0;
+}
+
+.celebration-flash__eyebrow {
+    display: block;
+    margin-bottom: 0.15rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.celebration-flash__content strong {
+    display: block;
+    font-size: 1.2rem;
+    line-height: 1.2;
+}
+
+.celebration-flash__content p {
+    margin: 0.25rem 0 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.92rem;
+}
+
+.celebration-flash__close {
+    position: relative;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+}
+
+.celebration-flash__close:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.walk-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.walk-stat-tile {
+    padding: 0.95rem 0.85rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.walk-stat-label,
+.walk-stat-subtle {
+    display: block;
+}
+
+.walk-stat-label {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.walk-stat-tile strong {
+    display: block;
+    margin: 0.45rem 0 0.2rem;
+    font-size: 1.55rem;
+    line-height: 1;
+}
+
+.walk-stat-subtle {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.walk-section-list {
+    display: grid;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.walk-log-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+}
+
+.walk-pace-pill {
+    white-space: nowrap;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.community-group-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1.1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+}
+
+.community-group-hero {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.community-group-hero__icon {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(16, 185, 129, 0.16));
+    color: #7dd3fc;
+    font-size: 1.35rem;
+}
+
+.community-member-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.community-member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+}
+
+.community-chat-stream {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.community-chat-bubble {
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+}
+
+.community-chat-bubble--own {
+    background: rgba(255, 71, 87, 0.12);
+    border-color: rgba(255, 127, 80, 0.25);
+}
+
 @media (max-width: 1200px) {
     .quick-add-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -919,5 +1136,22 @@ hr.dropdown-divider {
 @media (max-width: 991.98px) {
     .auth-landing {
         padding-top: 1.5rem;
+    }
+
+    .celebration-flash {
+        top: auto;
+        right: 16px;
+        bottom: 16px;
+        left: 16px;
+        width: auto;
+    }
+
+    .walk-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .walk-log-item {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

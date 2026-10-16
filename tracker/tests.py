@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from datetime import date
-from tracker.models import CardioSession, Exercise, Workout, WorkoutSet, Meal, FoodItem, Goal, HydrationLog
+from tracker.models import CardioSession, Exercise, Workout, WorkoutSet, Meal, FoodItem, Goal, HydrationLog, Measurement
 
 User = get_user_model()
 
@@ -74,6 +74,22 @@ class DashboardFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Create Goal')
 
+    def test_weight_history_always_offers_another_measurement(self):
+        Measurement.objects.create(user=self.user, weight=75)
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Weight History')
+        self.assertContains(response, 'Log Weight')
+
+    def test_multiple_measurements_can_be_logged_on_the_same_day(self):
+        for weight in (75, 74.5):
+            response = self.client.post(reverse('log_measurement'), {'weight': weight})
+            self.assertRedirects(response, reverse('dashboard'))
+
+        self.assertEqual(Measurement.objects.filter(user=self.user).count(), 2)
+
     def test_log_hydration_updates_today_entry(self):
         response = self.client.post(reverse('log_hydration'), {
             'amount': 0.5,
@@ -133,9 +149,12 @@ class DurationFlowTests(TestCase):
             'sets-2-reps': '',
             'sets-2-weight': '',
         })
-        self.assertRedirects(response, reverse('dashboard'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard'))
         workout = Workout.objects.get(user=self.user, notes='Heavy pull day')
         self.assertEqual(workout.duration_minutes, 45)
+        dashboard_response = self.client.get(reverse('dashboard'))
+        self.assertContains(dashboard_response, 'Kudos, nice workout!')
 
     def test_edit_workout_updates_duration_minutes(self):
         workout = Workout.objects.create(user=self.user, notes='Before edit', duration_minutes=30)
@@ -193,6 +212,20 @@ class DurationFlowTests(TestCase):
         cardio.refresh_from_db()
         self.assertEqual(cardio.duration_minutes, 35)
 
+    def test_log_walk_sets_walk_celebration(self):
+        response = self.client.post(reverse('log_cardio'), {
+            'activity_type': 'walking',
+            'duration_minutes': 42,
+            'distance_km': 3.4,
+            'avg_heart_rate': '',
+            'calories_burned': '',
+            'notes': 'Evening walk',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard'))
+        dashboard_response = self.client.get(reverse('dashboard'))
+        self.assertContains(dashboard_response, 'Kudos, nice walk!')
+
     def test_workout_history_displays_workout_and_cardio_duration(self):
         workout = Workout.objects.create(user=self.user, notes='History workout', duration_minutes=40)
         WorkoutSet.objects.create(workout=workout, exercise=self.exercise, reps=6, weight=100)
@@ -207,3 +240,30 @@ class DurationFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '40 mins')
         self.assertContains(response, '25 mins')
+
+    def test_dashboard_shows_walk_section_stats(self):
+        CardioSession.objects.create(
+            user=self.user,
+            activity_type='walking',
+            duration_minutes=35,
+            distance_km=2.8,
+            notes='Morning walk',
+        )
+        CardioSession.objects.create(
+            user=self.user,
+            activity_type='walking',
+            duration_minutes=40,
+            distance_km=3.2,
+            notes='Evening walk',
+        )
+
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Walk Tracker')
+        self.assertContains(response, '75')
+        self.assertContains(response, '6.0')
+
+    def test_log_walk_page_can_be_prefilled_from_query_string(self):
+        response = self.client.get(f"{reverse('log_cardio')}?activity_type=walking")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Log Walk')

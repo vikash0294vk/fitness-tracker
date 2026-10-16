@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.conf import settings
 from django.db import models
 
@@ -50,16 +52,24 @@ class CardioSession(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cardio_sessions')
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=date.today)
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_CHOICES)
     duration_minutes = models.PositiveIntegerField()
     distance_km = models.FloatField(blank=True, null=True)
     avg_heart_rate = models.PositiveIntegerField(blank=True, null=True)
     calories_burned = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    strava_activity_id = models.BigIntegerField(blank=True, null=True)
+    map_polyline = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ['-date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'strava_activity_id'],
+                name='unique_user_strava_activity',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.activity_type} on {self.date}"

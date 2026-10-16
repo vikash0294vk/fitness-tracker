@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'user_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back
+        </a>
+        <div>
+            <p class="auth-hero-kicker mb-2">Fitness Group</p>
+            <h2 class="fw-bold mb-1">{{ group.name }}</h2>
+            <p class="text-muted mb-0">{{ group.description|default:"Train together, share progress, and keep the momentum going." }}</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="strava-card p-4">
+                <div class="community-group-hero mb-3">
+                    <div class="community-group-hero__icon">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold">{{ group.members.count }} members</div>
+                        <div class="goal-meta">Created by {{ group.created_by.username }}</div>
+                    </div>
+                </div>
+
+                {% if request.user == group.created_by %}
+                <div class="empty-state-panel mb-4">
+                    <h5 class="mb-2">You lead this group</h5>
+                    <p class="text-muted mb-0">As the creator, you stay in the group chat and keep the community running.</p>
+                </div>
+                {% else %}
+                <form method="post" action="{% url 'toggle_group_membership' group.slug %}" class="mb-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'group_detail' group.slug %}">
+                    {% if is_member %}
+                    <button type="submit" class="btn btn-primary w-100">Leave Group</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-primary w-100">Join Group</button>
+                    {% endif %}
+                </form>
+                {% endif %}
+
+                <h6 class="fw-bold mb-3">Members</h6>
+                <div class="community-member-list">
+                    {% for member in group.members.all %}
+                    <div class="community-member-row">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if member.profile_picture %}
+                            <img src="{{ member.profile_picture.url }}" alt="{{ member.username }}" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 0.9rem; font-weight: 700;">
+                                {{ member.username|make_list|first|upper }}
+                            </div>
+                            {% endif %}
+                            <span class="fw-semibold">{{ member.username }}</span>
+                        </div>
+                        {% if member == group.created_by %}
+                        <span class="goal-chip">Coach</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="strava-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Group Chat</h5>
+                    <span class="goal-meta">{{ messages_list|length }} messages</span>
+                </div>
+
+                {% if is_member %}
+                <form method="post" class="dashboard-form-stack mb-4">
+                    {% csrf_token %}
+                    {{ message_form.as_p }}
+                    <button type="submit" class="btn btn-primary align-self-start">Send Message</button>
+                </form>
+                {% else %}
+                <div class="empty-state-panel mb-4">
+                    <h5 class="mb-2">Join to chat</h5>
+                    <p class="text-muted mb-0">You can read about the group now, but you need to join before posting messages.</p>
+                </div>
+                {% endif %}
+
+                <div class="community-chat-stream">
+                    {% for item in messages_list %}
+                    <div class="community-chat-bubble {% if item.user == request.user %}community-chat-bubble--own{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                            <strong>{{ item.user.username }}</strong>
+                            <span class="goal-meta">{{ item.created_at|date:"M d, P" }}</span>
+                        </div>
+                        <p class="mb-0">{{ item.text }}</p>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state-panel">
+                        <h5 class="mb-2">No messages yet</h5>
+                        <p class="text-muted mb-0">Be the first person to welcome everyone and get the conversation moving.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

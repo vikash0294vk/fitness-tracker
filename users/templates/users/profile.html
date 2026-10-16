@@ -99,6 +99,64 @@
                 </form>
             </div>
         </div>
+
+        <div class="strava-card mt-4">
+            <div class="card-header-styled d-flex justify-content-between align-items-center">
+                <span><i class="fa-brands fa-strava me-2"></i> Strava</span>
+                {% if strava_connected and strava_has_read_scope %}
+                <span class="badge text-bg-success">Connected</span>
+                {% elif strava_connected %}
+                <span class="badge text-bg-warning">Reconnect Needed</span>
+                {% elif strava_configured %}
+                <span class="badge text-bg-secondary">Ready</span>
+                {% else %}
+                <span class="badge text-bg-dark">Setup Needed</span>
+                {% endif %}
+            </div>
+            <div class="card-body-styled">
+                {% if not strava_configured %}
+                <p class="text-muted mb-2">Set <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code>, then restart Django.</p>
+                <p class="text-muted small mb-0">In your Strava app settings, the callback domain must match this site. Strava allows <code>localhost</code> and <code>127.0.0.1</code> for local development.</p>
+                {% elif strava_connected %}
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <span class="text-muted fw-bold small text-uppercase">Athlete ID</span>
+                    <span class="fw-bold">{{ user.strava_athlete_id|default:"--" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <span class="text-muted fw-bold small text-uppercase">Last Sync</span>
+                    <span class="fw-bold">{{ user.strava_last_sync_at|date:"M d, Y P"|default:"Never" }}</span>
+                </div>
+                {% if not strava_has_read_scope %}
+                <p class="text-muted mb-3">This connection is missing activity access. Reconnect and approve activity permissions to import Strava workouts.</p>
+                {% else %}
+                <p class="text-muted mb-3">Your first sync imports the last 30 days. Later syncs only pull activities that are new since the previous sync.</p>
+                {% endif %}
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'connect_strava' %}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-rotate-right me-2"></i>Reconnect
+                    </a>
+                    <form method="POST" action="{% url 'sync_strava' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-cloud-arrow-down me-2"></i>Sync Recent Activities
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'disconnect_strava' %}" onsubmit="return confirm('Disconnect Strava from this profile?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-link-slash me-2"></i>Disconnect
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="text-muted mb-3">Connect Strava to import recent runs, rides, walks, swims, and other activities into your cardio log.</p>
+                <a href="{% url 'connect_strava' %}" class="btn btn-primary">
+                    <i class="fa-brands fa-strava me-2"></i>Connect Strava
+                </a>
+                <p class="text-muted small mt-3 mb-0">Your Strava app callback domain must match this site's host. Use <code>localhost</code> or <code>127.0.0.1</code> for local testing.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

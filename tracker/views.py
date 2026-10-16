@@ -42,6 +42,14 @@ from .models import (
 )
 
 
+def queue_activity_celebration(request, *, title, detail, icon):
+    request.session['activity_celebration'] = {
+        'title': title,
+        'detail': detail,
+        'icon': icon,
+    }
+
+
 def check_and_update_pr(user, workout):
     # Load workout sets with exercises once so PR checks stay efficient.
     workout_sets = workout.sets.select_related('exercise').all()
@@ -110,6 +118,17 @@ def dashboard(request):
     ).aggregate(total_minutes=Sum('duration_minutes'))['total_minutes'] or 0
     cardio_today = CardioSession.objects.filter(user=request.user, date=today)
     cardio_this_week = CardioSession.objects.filter(user=request.user, date__gte=week_start).count()
+    walks_this_week = CardioSession.objects.filter(
+        user=request.user,
+        activity_type='walking',
+        date__gte=week_start,
+    )
+    walk_minutes_this_week = walks_this_week.aggregate(total_minutes=Sum('duration_minutes'))['total_minutes'] or 0
+    walk_distance_this_week = walks_this_week.aggregate(total_distance=Sum('distance_km'))['total_distance'] or 0
+    recent_walks = CardioSession.objects.filter(
+        user=request.user,
+        activity_type='walking',
+    ).order_by('-date', '-id')[:3]
 
     # Pull today's meals and the latest health tracking records.
     meals_today = Meal.objects.filter(user=request.user, date=today).prefetch_related('food_items')
@@ -131,13 +150,32 @@ def dashboard(request):
             progress = "Goal met!"
 
     # Build the social feed with related workout, set, comment, and kudo data.
-    following_users = request.user.following.values_list('followed', flat=True)
-    recent_workouts = Workout.objects.filter(
-        user__in=list(following_users) + [request.user.id]
+    from itertools import chain
+    following_users = list(request.user.following.values_list('followed', flat=True))
+    feed_users = following_users + [request.user.id]
+
+    recent_workouts = list(Workout.objects.filter(
+        user__in=feed_users
     ).select_related('user').prefetch_related(
         Prefetch('sets', queryset=WorkoutSet.objects.select_related('exercise')),
         Prefetch('comments', queryset=Comment.objects.select_related('user')),
         'kudos',
+    )[:15])
+
+    recent_cardio = list(CardioSession.objects.filter(
+        user__in=feed_users
+    ).select_related('user')[:15])
+
+    for w in recent_workouts:
+        w.is_cardio = False
+    for c in recent_cardio:
+        c.is_cardio = True
+
+    # Sort combined activities by date descending (and id descending to keep it somewhat stable)
+    recent_activities = sorted(
+        chain(recent_workouts, recent_cardio),
+        key=lambda x: (x.date, x.id),
+        reverse=True
     )[:15]
 
     # Compute the top athletes leaderboard across the app.
@@ -169,7 +207,7 @@ def dashboard(request):
         'workouts_today': workouts_today,
         'calories_today': calories_today,
         'progress': progress,
-        'recent_workouts': recent_workouts,
+        'recent_activities': recent_activities,
         'meals_today': meals_today,
         'top_athletes': top_athletes,
         'streak': streak,
@@ -183,7 +221,12 @@ def dashboard(request):
         'total_minutes_this_week': total_minutes_this_week,
         'cardio_today': cardio_today,
         'cardio_this_week': cardio_this_week,
+        'walk_sessions_this_week': walks_this_week.count(),
+        'walk_minutes_this_week': walk_minutes_this_week,
+        'walk_distance_this_week': walk_distance_this_week,
+        'recent_walks': recent_walks,
         'personal_records': personal_records,
+        'celebration': request.session.pop('activity_celebration', None),
         # Dashboard display note: Total Training Time This Week: {{ total_minutes_this_week }} mins
     }
     return render(request, 'tracker/dashboard.html', context)
@@ -231,6 +274,12 @@ def log_workout(request):
             messages.success(request, 'Workout logged successfully!')
             if new_prs:
                 messages.success(request, f"🏆 New Personal Record(s): {', '.join(new_prs)}")
+            queue_activity_celebration(
+                request,
+                title='Kudos, nice workout!',
+                detail='Your workout is in the feed and ready for more kudos.',
+                icon='fa-dumbbell',
+            )
             return redirect('dashboard')
     else:
         form = WorkoutForm()
@@ -249,12 +298,28 @@ def log_cardio(request):
             cardio_session = form.save(commit=False)
             cardio_session.user = request.user
             cardio_session.save()
-            messages.success(request, 'Cardio session logged successfully!')
+            is_walk = cardio_session.activity_type == 'walking'
+            messages.success(request, 'Walk logged successfully!' if is_walk else 'Cardio session logged successfully!')
+            queue_activity_celebration(
+                request,
+                title='Kudos, nice walk!' if is_walk else 'Kudos, nice workout!',
+                detail='Your walk is now part of your weekly progress.' if is_walk else 'Your cardio session is in the feed and ready for more kudos.',
+                icon='fa-shoe-prints' if is_walk else 'fa-bolt',
+            )
             return redirect('dashboard')
     else:
-        form = CardioSessionForm()
+        initial_activity = request.GET.get('activity_type')
+        valid_choices = {choice[0] for choice in CardioSession.ACTIVITY_CHOICES}
+        initial = {'activity_type': initial_activity} if initial_activity in valid_choices else None
+        form = CardioSessionForm(initial=initial)
 
-    context = {'form': form, 'title': 'Log Cardio', 'single_form': True}
+    selected_activity = form.initial.get('activity_type')
+    context = {
+        'form': form,
+        'title': 'Log Walk' if selected_activity == 'walking' else 'Log Cardio',
+        'single_form': True,
+        'show_route_builder': True,
+    }
     return render(request, 'tracker/log_form.html', context)
 
 
@@ -363,6 +428,12 @@ def use_template(request, template_id):
             messages.success(request, 'Workout logged successfully!')
             if new_prs:
                 messages.success(request, f"🏆 New Personal Record(s): {', '.join(new_prs)}")
+            queue_activity_celebration(
+                request,
+                title='Kudos, nice workout!',
+                detail='Your workout is in the feed and ready for more kudos.',
+                icon='fa-dumbbell',
+            )
             return redirect('dashboard')
     else:
         # Expand each template exercise into workout sets so the user can tweak before saving.
@@ -568,6 +639,7 @@ def edit_cardio(request, cardio_id):
         'form': form,
         'title': 'Edit Cardio Session',
         'single_form': True,
+        'show_route_builder': True,
     }
     return render(request, 'tracker/log_form.html', context)
 

@@ -13,6 +13,8 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html', redirect_authenticated_user=True), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
     path('community/', views.user_list, name='user_list'),
+    path('community/<int:user_id>/followers/', views.follow_list, {'list_type': 'followers'}, name='user_followers'),
+    path('community/<int:user_id>/following/', views.follow_list, {'list_type': 'following'}, name='user_following'),
     path('community/groups/create/', views.create_group, name='create_group'),
     path('community/groups/<slug:slug>/', views.group_detail, name='group_detail'),
     path('community/groups/<slug:slug>/membership/', views.toggle_group_membership, name='toggle_group_membership'),

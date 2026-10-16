@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from tracker.models import CardioSession
 from users import strava
-from .models import FitnessGroup, GroupMessage
+from .models import FitnessGroup, GroupMessage, UserFollow
 
 
 User = get_user_model()
@@ -94,6 +94,42 @@ class FitnessGroupFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Fitness Groups')
         self.assertContains(response, 'Step Streak')
+
+
+class FollowListFlowTests(TestCase):
+    def setUp(self):
+        self.viewer = User.objects.create_user(username='viewer', password='password')
+        self.profile_user = User.objects.create_user(username='profile-user', password='password')
+        self.follower = User.objects.create_user(username='follower', password='password')
+        self.followed_user = User.objects.create_user(username='followed-user', password='password')
+        UserFollow.objects.create(follower=self.follower, followed=self.profile_user)
+        UserFollow.objects.create(follower=self.profile_user, followed=self.followed_user)
+        self.client.login(username='viewer', password='password')
+
+    def test_any_signed_in_user_can_view_another_users_followers(self):
+        response = self.client.get(reverse('user_followers', args=[self.profile_user.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['profile_user'], self.profile_user)
+        self.assertEqual(response.context['list_type'], 'followers')
+        self.assertContains(response, 'follower')
+
+    def test_any_signed_in_user_can_view_another_users_following(self):
+        response = self.client.get(reverse('user_following', args=[self.profile_user.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['profile_user'], self.profile_user)
+        self.assertEqual(response.context['list_type'], 'following')
+        self.assertContains(response, 'followed-user')
+
+    def test_profile_and_community_show_links_to_both_lists(self):
+        profile_response = self.client.get(reverse('profile'))
+        community_response = self.client.get(reverse('user_list'))
+
+        self.assertContains(profile_response, reverse('user_followers', args=[self.viewer.id]))
+        self.assertContains(profile_response, reverse('user_following', args=[self.viewer.id]))
+        self.assertContains(community_response, reverse('user_followers', args=[self.profile_user.id]))
+        self.assertContains(community_response, reverse('user_following', args=[self.profile_user.id]))
 
 
 @override_settings(

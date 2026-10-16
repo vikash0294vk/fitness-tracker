@@ -183,6 +183,23 @@ def user_list(request):
 
 
 @login_required
+def follow_list(request, user_id, list_type):
+    profile_user = get_object_or_404(CustomUser, id=user_id)
+    if list_type == 'followers':
+        follow_records = profile_user.followers.select_related('follower')
+    elif list_type == 'following':
+        follow_records = profile_user.following.select_related('followed')
+    else:
+        return redirect('user_list')
+
+    return render(request, 'users/follow_list.html', {
+        'profile_user': profile_user,
+        'follow_records': follow_records,
+        'list_type': list_type,
+    })
+
+
+@login_required
 def create_group(request):
     if request.method != 'POST':
         return redirect('user_list')

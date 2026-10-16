@@ -94,9 +94,13 @@
                     </div>
                     {% endif %}
                     <h5 class="fw-bold mb-1">{{ u.username }}</h5>
-                    <p class="text-muted small mb-3">
-                        <span id="follower-count-{{ u.id }}">{{ u.followers.count }}</span> Followers
-                    </p>
+                    <div class="small mb-3">
+                        <a href="{% url 'user_followers' u.id %}" class="text-decoration-none">
+                            <span id="follower-count-{{ u.id }}">{{ u.followers.count }}</span> Followers
+                        </a>
+                        <span class="text-muted"> · </span>
+                        <a href="{% url 'user_following' u.id %}" class="text-decoration-none">{{ u.following.count }} Following</a>
+                    </div>
 
                     <button class="btn follow-toggle-btn {% if u.id in following_ids %}btn-secondary{% else %}btn-primary{% endif %} w-100 mt-auto" data-user-id="{{ u.id }}" data-url="{% url 'toggle_follow' u.id %}">
                         {% if u.id in following_ids %}

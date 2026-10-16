@@ -30,12 +30,16 @@
                         <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Streak</div>
                     </div>
                     <div>
-                        <div class="fw-bold fs-5">{{ user.followers.count|default:"0" }}</div>
-                        <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Followers</div>
+                        <a href="{% url 'user_followers' user.id %}" class="text-decoration-none text-reset">
+                            <div class="fw-bold fs-5">{{ user.followers.count|default:"0" }}</div>
+                            <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Followers</div>
+                        </a>
                     </div>
                     <div>
-                        <div class="fw-bold fs-5">{{ user.following.count|default:"0" }}</div>
-                        <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Following</div>
+                        <a href="{% url 'user_following' user.id %}" class="text-decoration-none text-reset">
+                            <div class="fw-bold fs-5">{{ user.following.count|default:"0" }}</div>
+                            <div class="text-muted fw-bold small text-uppercase" style="font-size: 0.7rem;">Following</div>
+                        </a>
                     </div>
                 </div>
 

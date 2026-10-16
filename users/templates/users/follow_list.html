@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ list_type|title }} · {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <p class="auth-hero-kicker mb-2">Community</p>
+            <h2 class="fw-bold mb-1">{{ list_type|title }}</h2>
+            <p class="text-muted mb-0">{{ profile_user.username }}'s {{ list_type }} · {{ follow_records|length }} total</p>
+        </div>
+        <a href="{% url 'user_list' %}" class="btn btn-outline-secondary">Back to Community</a>
+    </div>
+
+    <div class="strava-card p-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+            {% for follow_record in follow_records %}
+            {% if list_type == 'followers' %}
+            {% with person=follow_record.follower %}
+            <div class="col">
+                <div class="community-group-card h-100 d-flex align-items-center gap-3">
+                    {% if person.profile_picture %}
+                    <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}" class="rounded-circle" style="width: 52px; height: 52px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px; font-weight: bold;">
+                        {{ person.username|make_list|first|upper }}
+                    </div>
+                    {% endif %}
+                    <div class="min-w-0">
+                        <div class="fw-bold text-break">{{ person.username }}</div>
+                        <a class="small text-decoration-none" href="{% url 'user_followers' person.id %}">{{ person.followers.count }} followers</a>
+                        <span class="text-muted small"> · </span>
+                        <a class="small text-decoration-none" href="{% url 'user_following' person.id %}">{{ person.following.count }} following</a>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% else %}
+            {% with person=follow_record.followed %}
+            <div class="col">
+                <div class="community-group-card h-100 d-flex align-items-center gap-3">
+                    {% if person.profile_picture %}
+                    <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}" class="rounded-circle" style="width: 52px; height: 52px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px; font-weight: bold;">
+                        {{ person.username|make_list|first|upper }}
+                    </div>
+                    {% endif %}
+                    <div class="min-w-0">
+                        <div class="fw-bold text-break">{{ person.username }}</div>
+                        <a class="small text-decoration-none" href="{% url 'user_followers' person.id %}">{{ person.followers.count }} followers</a>
+                        <span class="text-muted small"> · </span>
+                        <a class="small text-decoration-none" href="{% url 'user_following' person.id %}">{{ person.following.count }} following</a>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% endif %}
+            {% empty %}
+            <div class="col-12">
+                <div class="empty-state-panel text-center">
+                    <h5 class="mb-2">No {{ list_type }} yet</h5>
+                    <p class="text-muted mb-0">
+                        {% if list_type == 'followers' %}
+                        No one is following {{ profile_user.username }} yet.
+                        {% else %}
+                        {{ profile_user.username }} is not following anyone yet.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
